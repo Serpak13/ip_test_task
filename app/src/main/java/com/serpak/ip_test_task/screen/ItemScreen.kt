@@ -50,6 +50,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.serpak.ip_test_task.R
 import com.serpak.ip_test_task.entity.ItemEntity
 import com.serpak.ip_test_task.ui.theme.Purple40
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun ItemScreen(
@@ -100,6 +103,8 @@ fun ItemCard(
 ){
     var showDialog by remember { mutableStateOf(false) }
     var showDeleteDialog by remember {mutableStateOf(false)}
+
+    val formattedDate = formatTimestamp(item.time.toLong())
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -174,7 +179,7 @@ fun ItemCard(
                     )
                     Spacer(modifier = Modifier.height(3.dp))
                     Text(
-                        text = item.time.toString()
+                        text = formattedDate
                     )
                 }
             }
@@ -290,5 +295,11 @@ fun DeleteConfirmationDialog(
     )
 }
 
+
+fun formatTimestamp(timestamp: Long): String {
+    val date = Date(timestamp * 1000) // Умножаем на 1000, чтобы преобразовать секунды в миллисекунды
+    val format = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault()) // Форматируйте по вашему желанию
+    return format.format(date)
+}
 
 
