@@ -19,4 +19,7 @@ interface ItemDao {
     @Query("DELETE FROM item WHERE id = :itemId")
     suspend fun deleteById(itemId:Int)
 
+    @Query("UPDATE item SET amount = :newAmount WHERE id = :itemId")
+    suspend fun updateItemAmount(itemId: Int, newAmount: Int)
+
 }

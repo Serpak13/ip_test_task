@@ -11,4 +11,6 @@ interface ItemRepository {
     suspend fun insertItem(entity: ItemEntity)
     fun getAllItems():LiveData<List<ItemEntity>>
     suspend fun deleteById(itemId:Int)
+
+    suspend fun updateItemAmount(itemId: Int, newAmount: Int)
 }

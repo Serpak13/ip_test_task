@@ -16,25 +16,30 @@ import javax.inject.Inject
 @HiltViewModel
 class ItemScreenViewModel @Inject constructor(
     private val itemRepository: ItemRepository
-): ViewModel() {
+) : ViewModel() {
 
-    // Получаем LiveData из репозитория
+
     val items: LiveData<List<ItemEntity>> = itemRepository.getAllItems()
 
-    init {
-        // Загружаем данные при инициализации, если нужно
-        fetchAllItems()
-    }
 
-    private fun fetchAllItems() {
+    fun deleteItemById(id: Int) {
         viewModelScope.launch {
             try {
-                // Можно добавить дополнительные операции, если необходимо
-                // Например, вставку или удаление данных
-                // Но сами данные будут обновляться через LiveData
+                itemRepository.deleteById(id)
             } catch (e: Exception) {
-                Log.e("ItemScreenViewModel", "Error fetching items", e)
+                Log.e("ItemScreenViewModel", "Ошибка при удалении", e)
             }
         }
     }
+
+    fun updateItemAmount(itemId:Int, newAmount:Int){
+        viewModelScope.launch{
+            try{
+                itemRepository.updateItemAmount(itemId, newAmount)
+            }catch(e: Exception){
+                Log.e("ItemScreenViewModel", "Ошибка при обновлении данных", e)
+            }
+        }
+    }
+
 }

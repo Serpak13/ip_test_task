@@ -22,10 +22,16 @@ import com.serpak.ip_test_task.screen.ItemScreenViewModel
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.mutableStateOf
@@ -39,13 +45,15 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.serpak.ip_test_task.R
 import com.serpak.ip_test_task.entity.ItemEntity
 import com.serpak.ip_test_task.ui.theme.Purple40
 
 @Composable
 fun ItemScreen(
-    viewModel: ItemScreenViewModel = viewModel()
+    viewModel: ItemScreenViewModel = hiltViewModel()
 ) {
 
     var searchQuery by remember { mutableStateOf("") }
@@ -56,33 +64,42 @@ fun ItemScreen(
     }
 
     //Реализовать поисковую строку
-    Column(){
-        TextField(
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ){
+        Text(
+            modifier = Modifier.padding(top = 10.dp),
+            text = "Список товаров",
+            style = TextStyle(
+                fontSize = 25.sp
+            )
+        )
+        OutlinedTextField(
             value = searchQuery,
             onValueChange = { newQuery -> searchQuery = newQuery },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(8.dp),
+                .padding(12.dp),
             label = { Text("Поиск по названию") }
         )
-    }
-
-    LazyColumn(
-
-    ) {
-        items(filteredItemList){item ->
-            ItemCard(item = item)
+        LazyColumn {
+            items(filteredItemList){item ->
+                ItemCard(item = item)
+            }
         }
-    }
 
+    }
 
 }
 
-
 @Composable
 fun ItemCard(
-    item: ItemEntity
+    item: ItemEntity,
+    viewModel: ItemScreenViewModel = hiltViewModel()
 ){
+    var showDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember {mutableStateOf(false)}
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -107,7 +124,7 @@ fun ItemCard(
                     )
                 )
                 IconButton(
-                    onClick = { /*TODO*/ } //сделать функцию добавления
+                    onClick = { showDialog = true }
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_edit),
@@ -116,7 +133,7 @@ fun ItemCard(
                     )
                 }
                 IconButton(
-                    onClick = { /*TODO*/}
+                    onClick = { showDeleteDialog = true }
                 ){
                     Icon(
                         painter = painterResource(id = R.drawable.ic_delete),
@@ -126,10 +143,7 @@ fun ItemCard(
                 }
             }
             Spacer(modifier = Modifier.height(2.dp))
-            //TagAssistChips(tags = item.tags)
-            Text(
-                text = item.tags.toString()  //переделать
-            )
+            TagsRow(tags = item.tags)
             Spacer(modifier = Modifier.height(10.dp))
             Row (
                 verticalAlignment = Alignment.CenterVertically,
@@ -166,6 +180,115 @@ fun ItemCard(
             }
         }
     }
+    if (showDialog) {
+        EditAmountDialog(
+            initialAmount = item.amount,
+            onDismiss = { showDialog = false },
+            onConfirm = { newAmount ->
+                viewModel.updateItemAmount(item.id, newAmount) // Обновление количества через ViewModel
+                showDialog = false
+            }
+        )
+    }
+
+    if (showDeleteDialog) {
+        DeleteConfirmationDialog(
+            onDismiss = { showDeleteDialog = false },
+            onConfirm = {
+                viewModel.deleteItemById(item.id)
+                showDeleteDialog = false
+            }
+        )
+    }
 
 }
+
+@Composable
+fun TagsRow(tags: List<String>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        tags.forEach { tag ->
+            AssistChip(
+                onClick = { /* TODO */ },
+                label = { Text(text = tag) }
+            )
+        }
+    }
+}
+
+@Composable
+fun EditAmountDialog(
+    initialAmount: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    var amount by remember { mutableStateOf(initialAmount) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+               Icon(painter = painterResource(id = R.drawable.ic_settings), contentDescription = "")
+        },
+        title = { Text(text = "Количество товара") },
+        text = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
+            ) {
+                IconButton(onClick = { if (amount > 0) amount-- }) {
+                    Icon(Icons.Default.KeyboardArrowLeft, contentDescription = "Decrease")
+                }
+                Text(
+                    text = amount.toString(),
+                    modifier = Modifier.padding(16.dp),
+                    style = TextStyle(fontSize = 20.sp)
+                )
+                IconButton(onClick = { amount++ }) {
+                    Icon(Icons.Default.KeyboardArrowRight, contentDescription = "Increase")
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = { onConfirm(amount) }) {
+                Text("Принять")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Отмена")
+            }
+        }
+    )
+}
+@Composable
+fun DeleteConfirmationDialog(
+    onDismiss: () -> Unit,
+    onConfirm: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(painter = painterResource(id = R.drawable.ic_warning), contentDescription = "")
+        },
+        title = { Text(text = "Удаление товара") },
+        text = { Text(text = "Вы действительно хотите удалить выбранный товар?") },
+        confirmButton = {
+            Button(onClick = { onConfirm() }) {
+                Text("Да")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Нет")
+            }
+        }
+    )
+}
+
+
 

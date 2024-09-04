@@ -19,4 +19,8 @@ class ItemRepoImpl(
     override suspend fun deleteById(itemId: Int) {
         dao.deleteById(itemId)
     }
+
+    override suspend fun updateItemAmount(itemId: Int, newAmount: Int) {
+       dao.updateItemAmount(itemId, newAmount)
+    }
 }
