@@ -297,8 +297,8 @@ fun DeleteConfirmationDialog(
 
 
 fun formatTimestamp(timestamp: Long): String {
-    val date = Date(timestamp * 1000) // Умножаем на 1000, чтобы преобразовать секунды в миллисекунды
-    val format = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault()) // Форматируйте по вашему желанию
+    val date = Date(timestamp * 1000)
+    val format = SimpleDateFormat("dd MMM yyyy HH:mm:ss", Locale.getDefault())
     return format.format(date)
 }
 
